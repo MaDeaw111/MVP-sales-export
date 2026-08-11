@@ -3,6 +3,7 @@ import { createConfiguredSupabaseClient } from './lib/supabase.js';
 import { signInWithGoogle } from './lib/auth.js';
 import { completeApprovedSession } from './lib/session.js';
 import { renderCustomers } from './views/customers.js';
+import { renderProducts } from './views/products.js';
 
 const app = document.querySelector('#app');
 
@@ -19,7 +20,14 @@ function renderSignIn(supabase) {
 
 async function renderApp(supabase, profile) {
   app.innerHTML = `<div class="app-shell"><aside><p class="eyebrow">WCAT</p><h2>Sales Support</h2><nav><a href="#customers" class="active">Customers</a><a href="#crm">CRM & Actions</a><a href="#products">Products & Specs</a><a href="#pricing">Pricing</a><a href="#po">Purchase Orders</a></nav><p class="hint">${profile.role}</p></aside><main id="content"></main></div>`;
-  await renderCustomers(document.querySelector('#content'), { supabase, profile });
+  const content = document.querySelector('#content');
+  const renderRoute = async () => {
+    const isProducts = location.hash === '#products';
+    app.querySelectorAll('nav a').forEach((link) => link.classList.toggle('active', link.hash === (isProducts ? '#products' : '#customers')));
+    if (isProducts) await renderProducts(content, { supabase, profile }); else await renderCustomers(content, { supabase, profile });
+  };
+  window.addEventListener('hashchange', renderRoute);
+  await renderRoute();
 }
 
 async function boot(supabase) {

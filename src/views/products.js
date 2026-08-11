@@ -1,0 +1,9 @@
+import { createProduct, listProducts } from '../lib/products-api.js';
+export async function renderProducts(container, { supabase }) {
+  container.innerHTML = `<section class="page"><header class="page-header"><div><p class="eyebrow">PRODUCTS</p><h1>Product master</h1><p>Products are available for approved specifications and PO selection.</p></div><button id="new-product">New Product</button></header><div id="product-message" role="status"></div><div class="table-wrap"><table><thead><tr><th>Code</th><th>Name</th><th>Grade</th><th>Status</th></tr></thead><tbody id="product-rows"><tr><td colspan="4">Loading products…</td></tr></tbody></table></div></section>`;
+  const rows=container.querySelector('#product-rows'); const message=container.querySelector('#product-message');
+  async function load(){ try { const products=await listProducts(supabase); rows.innerHTML=products.length?products.map((p)=>`<tr><td>${escapeHtml(p.code)}</td><td>${escapeHtml(p.name)}</td><td>${escapeHtml(p.grade||'—')}</td><td>${p.is_active?'Active':'Inactive'}</td></tr>`).join(''):'<tr><td colspan="4">No products yet.</td></tr>'; } catch(error){message.textContent=`Could not load products: ${error.message}`;} }
+  container.querySelector('#new-product').addEventListener('click',()=>{message.innerHTML='<form id="product-form" class="inline-form"><label>Code<input name="code" required /></label><label>Name<input name="name" required /></label><button>Create product</button></form>'; message.querySelector('form').addEventListener('submit',async(e)=>{e.preventDefault();try{await createProduct(supabase,Object.fromEntries(new FormData(e.currentTarget)));message.textContent='Product created.';await load();}catch(error){message.textContent=error.message;}});});
+  await load();
+}
+function escapeHtml(value){const element=document.createElement('span');element.textContent=value;return element.innerHTML;}
