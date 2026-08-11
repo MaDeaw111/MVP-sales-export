@@ -43,7 +43,7 @@ select * from finish();
 
 - [ ] **Step 2: Run the test and verify RED**
 
-Run: `supabase test db --file supabase/tests/0013_shipment_configuration_master.test.sql`
+Run: `supabase test db --local supabase/tests/0013_shipment_configuration_master.test.sql`
 
 Expected: FAIL because the master table and trigger do not exist.
 
@@ -66,7 +66,7 @@ Backfill known Jumbobag labels. Retain Bulk Vessel/Truck as `LEGACY`; deactivate
 
 - [ ] **Step 4: Run the test and verify GREEN**
 
-Run: `supabase db reset; supabase test db --file supabase/tests/0013_shipment_configuration_master.test.sql`
+Run: `supabase db reset; supabase test db --local supabase/tests/0013_shipment_configuration_master.test.sql`
 
 Expected: PASS; invalid Jumbobag input fails and valid configuration MT is calculated.
 

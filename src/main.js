@@ -5,6 +5,7 @@ import { completeApprovedSession } from './lib/session.js';
 import { renderCustomers } from './views/customers.js';
 import { renderProducts } from './views/products.js';
 import { renderShipmentConfigurations } from './views/shipment-configurations.js';
+import { renderJumbobags } from './views/jumbobags.js';
 import { renderStandardPrices } from './views/standard-prices.js';
 import { renderSpecialPrices } from './views/special-prices.js';
 import { renderPurchaseOrders } from './views/purchase-orders.js';
@@ -34,12 +35,12 @@ function renderSignIn(supabase) {
 }
 
 async function renderApp(supabase, profile) {
-  app.innerHTML = `<div class="app-shell"><aside><p class="eyebrow">WCAT</p><h2>Sales Support</h2><nav><a href="#customers" class="active">Customers</a><a href="#crm">CRM & Actions</a><a href="#products">Products & Specs</a><a href="#configurations">Shipment Config</a><a href="#pricing">Pricing</a><a href="#special-prices">Special Price</a><a href="#po">Purchase Orders</a></nav><p class="hint">${profile.role}</p></aside><main id="content"></main></div>`;
+  app.innerHTML = `<div class="app-shell"><aside><p class="eyebrow">WCAT</p><h2>Sales Support</h2><nav><a href="#customers" class="active">Customers</a><a href="#crm">CRM & Actions</a><a href="#products">Products & Specs</a><a href="#configurations">Shipment Config</a>${profile.role === 'ADMIN' ? '<a href="#jumbobags">Jumbobag Master</a>' : ''}<a href="#pricing">Pricing</a><a href="#special-prices">Special Price</a><a href="#po">Purchase Orders</a></nav><p class="hint">${profile.role}</p></aside><main id="content"></main></div>`;
   const content = document.querySelector('#content');
   const renderRoute = async () => {
     const route = location.hash || '#customers';
     app.querySelectorAll('nav a').forEach((link) => link.classList.toggle('active', link.hash === route));
-    if (route === '#products') await renderProducts(content, { supabase, profile }); else if (route === '#configurations') await renderShipmentConfigurations(content, { supabase, profile }); else if (route === '#pricing') await renderStandardPrices(content, { supabase, profile }); else if (route === '#special-prices') await renderSpecialPrices(content, { supabase, profile }); else if (route === '#po') renderPurchaseOrders(content, { supabase, profile }); else await renderCustomers(content, { supabase, profile });
+    if (route === '#products') await renderProducts(content, { supabase, profile }); else if (route === '#configurations') await renderShipmentConfigurations(content, { supabase, profile }); else if (route === '#jumbobags') await renderJumbobags(content, { supabase, profile }); else if (route === '#pricing') await renderStandardPrices(content, { supabase, profile }); else if (route === '#special-prices') await renderSpecialPrices(content, { supabase, profile }); else if (route === '#po') renderPurchaseOrders(content, { supabase, profile }); else await renderCustomers(content, { supabase, profile });
   };
   window.addEventListener('hashchange', renderRoute);
   await renderRoute();
