@@ -9,7 +9,7 @@ export async function renderCustomers(container, { supabase, profile }) {
     try {
       const customers = await listCustomers(supabase);
       rows.innerHTML = customers.length ? customers.map((customer) => `<tr><td>${escapeHtml(customer.customer_code || '—')}</td><td><button class="link-button" data-customer-id="${customer.id}">${escapeHtml(customer.name)}</button></td><td>${formatLabel(customer.source)}</td><td>${formatLabel(customer.status)}</td></tr>`).join('') : '<tr><td colspan="4">No customers are available for your role.</td></tr>';
-      rows.querySelectorAll('[data-customer-id]').forEach((button) => button.addEventListener('click', () => renderCustomerDetail(container, { supabase, customer: customers.find((customer) => customer.id === button.dataset.customerId), onBack: () => renderCustomers(container, { supabase, profile }) })));
+      rows.querySelectorAll('[data-customer-id]').forEach((button) => button.addEventListener('click', () => renderCustomerDetail(container, { supabase, profile, customer: customers.find((customer) => customer.id === button.dataset.customerId), onBack: () => renderCustomers(container, { supabase, profile }) })));
     } catch (error) { message.textContent = `Could not load customers: ${error.message}`; }
   }
   container.querySelector('#new-customer')?.addEventListener('click', () => {
