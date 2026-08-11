@@ -1,6 +1,7 @@
 import './styles/app.css';
 import { createConfiguredSupabaseClient } from './lib/supabase.js';
 import { signInWithGoogle } from './lib/auth.js';
+import { completeApprovedSession } from './lib/session.js';
 
 const app = document.querySelector('#app');
 
@@ -15,8 +16,19 @@ function renderSignIn(supabase) {
   });
 }
 
+function renderApp(profile) {
+  app.innerHTML = `<main class="centered"><section class="card"><p class="eyebrow">WCAT • ${profile.role}</p><h1>Sales Support</h1><p>Approved access for ${profile.email}.</p><p class="hint">Customer, CRM, Pricing, and PO modules are protected by Supabase RLS.</p></section></main>`;
+}
+
+async function boot(supabase) {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return renderSignIn(supabase);
+  try { renderApp(await completeApprovedSession(supabase)); }
+  catch (error) { await supabase.auth.signOut(); renderError(error); }
+}
+
 try {
-  renderSignIn(createConfiguredSupabaseClient());
+  boot(createConfiguredSupabaseClient());
 } catch (error) {
   renderError(error);
 }
