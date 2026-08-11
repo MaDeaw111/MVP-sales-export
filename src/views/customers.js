@@ -1,4 +1,5 @@
 import { createDirectCustomer, listCustomers } from '../lib/customers-api.js';
+import { renderCustomerDetail } from './customer-detail.js';
 
 export async function renderCustomers(container, { supabase, profile }) {
   container.innerHTML = `<section class="page"><header class="page-header"><div><p class="eyebrow">CUSTOMERS</p><h1>Customer directory</h1><p>Only customers permitted by your role are shown.</p></div>${profile.role === 'EXTERNAL_SALES' ? '<a class="button" href="#first-po">New Customer + First PO</a>' : '<button id="new-customer">New Direct Customer</button>'}</header><div id="customer-message" role="status"></div><div class="table-wrap"><table><thead><tr><th>Name</th><th>Source</th><th>Status</th></tr></thead><tbody id="customer-rows"><tr><td colspan="3">Loading customers…</td></tr></tbody></table></div></section>`;
@@ -7,7 +8,8 @@ export async function renderCustomers(container, { supabase, profile }) {
   async function load() {
     try {
       const customers = await listCustomers(supabase);
-      rows.innerHTML = customers.length ? customers.map((customer) => `<tr><td>${escapeHtml(customer.name)}</td><td>${formatLabel(customer.source)}</td><td>${formatLabel(customer.status)}</td></tr>`).join('') : '<tr><td colspan="3">No customers are available for your role.</td></tr>';
+      rows.innerHTML = customers.length ? customers.map((customer) => `<tr><td><button class="link-button" data-customer-id="${customer.id}">${escapeHtml(customer.name)}</button></td><td>${formatLabel(customer.source)}</td><td>${formatLabel(customer.status)}</td></tr>`).join('') : '<tr><td colspan="3">No customers are available for your role.</td></tr>';
+      rows.querySelectorAll('[data-customer-id]').forEach((button) => button.addEventListener('click', () => renderCustomerDetail(container, { supabase, customer: customers.find((customer) => customer.id === button.dataset.customerId), onBack: () => renderCustomers(container, { supabase, profile }) })));
     } catch (error) { message.textContent = `Could not load customers: ${error.message}`; }
   }
   container.querySelector('#new-customer')?.addEventListener('click', () => {
