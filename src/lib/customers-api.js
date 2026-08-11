@@ -1,5 +1,5 @@
 export async function listCustomers(supabase) {
-  const { data, error } = await supabase.from('customers').select('id,name,source,status,created_at').order('name');
+  const { data, error } = await supabase.from('customers').select('id,customer_code,name,source,status,created_at').order('name');
   if (error) throw error;
   return data;
 }

@@ -4,9 +4,9 @@ import { listCustomers, createDirectCustomer } from '../../src/lib/customers-api
 describe('customers API', () => {
   it('loads customers ordered by name', async () => {
     const calls = [];
-    const supabase = { from: () => ({ select: () => ({ order: (field) => { calls.push(field); return Promise.resolve({ data: [{ name: 'ACME' }], error: null }); } }) }) };
-    await expect(listCustomers(supabase)).resolves.toEqual([{ name: 'ACME' }]);
-    expect(calls).toEqual(['name']);
+    const supabase = { from: () => ({ select: (fields) => ({ order: (field) => { calls.push({ fields, field }); return Promise.resolve({ data: [{ customer_code: 'CUST-001', name: 'ACME' }], error: null }); } }) }) };
+    await expect(listCustomers(supabase)).resolves.toEqual([{ customer_code: 'CUST-001', name: 'ACME' }]);
+    expect(calls).toEqual([{ fields: 'id,customer_code,name,source,status,created_at', field: 'name' }]);
   });
 
   it('creates a Direct WCAT prospect', async () => {
