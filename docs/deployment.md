@@ -35,6 +35,15 @@
 4. Never add a Supabase secret/service-role key to Cloudflare Pages browser
    variables.
 
+## Product Spec master data
+
+`Data/Product_Spec.xlsx` supplies the approved `1.0` specifications for
+`PROD-001` through `PROD-012`. Its technical limits are stored in
+`product_specs.parameters`. After a spec is approved, do not change those
+technical values in place: create a new Product Code and a new approved spec.
+Admin may still update non-technical product master fields such as name, short
+name, and remark.
+
 ## Release verification
 
 ```powershell
