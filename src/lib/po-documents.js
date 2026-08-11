@@ -7,3 +7,9 @@ export async function uploadPoDocument(supabase, path, file) {
   const { error } = await supabase.storage.from('customer-po-private').upload(path, file, { upsert: false });
   if (error) throw error;
 }
+
+export async function createPoDocumentDownloadUrl(supabase, path) {
+  const { data, error } = await supabase.storage.from('customer-po-private').createSignedUrl(path, 300);
+  if (error) throw error;
+  return data.signedUrl;
+}
