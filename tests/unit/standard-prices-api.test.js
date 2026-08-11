@@ -1,0 +1,3 @@
+import { describe, expect, it } from 'vitest';
+import { createStandardPrice } from '../../src/lib/standard-prices-api.js';
+describe('standard prices API', () => { it('creates a USD per MT price with an effective date', async () => { let value; const supabase={from:()=>({insert:(input)=>{value=input;return{select:()=>({single:()=>Promise.resolve({data:{id:'price-1'},error:null})})};}})}; await createStandardPrice(supabase,{productId:'p1',specId:'s1',fobUsdMt:420,effectiveDate:'2026-08-11'}); expect(value).toMatchObject({product_id:'p1',product_spec_id:'s1',fob_usd_mt:420,effective_date:'2026-08-11',status:'ACTIVE'}); }); });

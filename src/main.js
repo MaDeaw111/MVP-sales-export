@@ -5,6 +5,7 @@ import { completeApprovedSession } from './lib/session.js';
 import { renderCustomers } from './views/customers.js';
 import { renderProducts } from './views/products.js';
 import { renderShipmentConfigurations } from './views/shipment-configurations.js';
+import { renderStandardPrices } from './views/standard-prices.js';
 
 const app = document.querySelector('#app');
 
@@ -25,7 +26,7 @@ async function renderApp(supabase, profile) {
   const renderRoute = async () => {
     const route = location.hash || '#customers';
     app.querySelectorAll('nav a').forEach((link) => link.classList.toggle('active', link.hash === route));
-    if (route === '#products') await renderProducts(content, { supabase, profile }); else if (route === '#configurations') await renderShipmentConfigurations(content, { supabase, profile }); else await renderCustomers(content, { supabase, profile });
+    if (route === '#products') await renderProducts(content, { supabase, profile }); else if (route === '#configurations') await renderShipmentConfigurations(content, { supabase, profile }); else if (route === '#pricing') await renderStandardPrices(content, { supabase, profile }); else await renderCustomers(content, { supabase, profile });
   };
   window.addEventListener('hashchange', renderRoute);
   await renderRoute();
