@@ -44,6 +44,19 @@ technical values in place: create a new Product Code and a new approved spec.
 Admin may still update non-technical product master fields such as name, short
 name, and remark.
 
+### Admin Product Spec workflow
+
+1. Sign in with an active `ADMIN` profile and open **Products & Specs**.
+2. Select a product name to view its approved version and technical limits.
+3. Use **Edit product master** only for the name, short name, and remark.
+4. For any technical change, use **Create new product from this spec**. Give
+   the new product a unique code, adjust the copied JSON technical limits, and
+   save it.
+
+The source approved spec remains unchanged. The application creates the new
+product and its approved `1.0` spec atomically, so a failed save cannot leave
+an incomplete product record.
+
 ## Release verification
 
 ```powershell
