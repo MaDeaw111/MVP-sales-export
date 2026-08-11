@@ -1,0 +1,10 @@
+begin;
+select plan(6);
+select has_table('public', 'customers', 'customers exists');
+select has_table('public', 'purchase_orders', 'purchase orders exists');
+select has_function('public', 'create_external_customer_first_po', 'first PO transaction exists');
+select has_function('public', 'evaluate_po_commercial', 'commercial evaluator exists');
+select has_table('public', 'special_price_requests', 'special pricing exists');
+select has_table('public', 'document_versions', 'document versioning exists');
+select * from finish();
+rollback;
