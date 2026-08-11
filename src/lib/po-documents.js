@@ -22,6 +22,14 @@ export async function registerPoDocumentVersion(supabase, { documentId, path, fi
   return data;
 }
 
+export async function uploadNewPoDocument(supabase, { customerId, poId, file }) {
+  const document = await createPoDocument(supabase, poId);
+  const path = buildPoDocumentPath({ customerId, poId, documentId: document.id, version: 1, fileName: file.name });
+  await uploadPoDocument(supabase, path, file);
+  await registerPoDocumentVersion(supabase, { documentId: document.id, path, file });
+  return { documentId: document.id, path };
+}
+
 export async function uploadPoDocument(supabase, path, file) {
   const { error } = await supabase.storage.from('customer-po-private').upload(path, file, { upsert: false });
   if (error) throw error;
