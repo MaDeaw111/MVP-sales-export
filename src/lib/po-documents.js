@@ -9,6 +9,19 @@ export async function createPoDocument(supabase, poId) {
   return data;
 }
 
+export async function registerPoDocumentVersion(supabase, { documentId, path, file }) {
+  const { data, error } = await supabase.from('document_versions').insert({
+    document_id: documentId,
+    version_number: 1,
+    object_path: path,
+    original_filename: file.name,
+    mime_type: file.type || null,
+    byte_size: file.size,
+  }).select('id').single();
+  if (error) throw error;
+  return data;
+}
+
 export async function uploadPoDocument(supabase, path, file) {
   const { error } = await supabase.storage.from('customer-po-private').upload(path, file, { upsert: false });
   if (error) throw error;
