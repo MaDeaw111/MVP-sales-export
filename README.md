@@ -1,6 +1,6 @@
 # WCAT Sales Support Web App
 
-Release 1 provides approved-profile Google login, Customer/CRM, Product/Spec,
+Release 1 provides approved-profile Email + Password login, Customer/CRM, Product/Spec,
 Shipment Configuration, Standard/Special Pricing, PO commercial review, FX
 approval, and private Customer PO document storage.
 

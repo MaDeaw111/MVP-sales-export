@@ -2,10 +2,12 @@
 
 ## Supabase
 
-1. In the Supabase project, configure Google as an Auth provider and add the
-   Cloudflare Pages production URL and preview URL to Auth redirect URLs.
-2. Bootstrap the first Admin through the SQL editor, using the employee's exact
-   lowercase Google email:
+1. In the Supabase Dashboard, open **Authentication → Users → Add user**.
+   Create the user with their work email and a strong temporary password.
+   Confirm the user in the Dashboard when prompted, or have the user complete
+   the confirmation email before their first sign-in.
+2. Bootstrap the first Admin through the SQL editor before that user signs in,
+   using the employee's exact lowercase email:
 
    ```sql
    insert into public.user_profiles (email, role, is_active)
@@ -41,5 +43,6 @@ pnpm run build
 supabase test db
 ```
 
-Confirm an unapproved Google account is rejected, an External Sales user cannot
-see another agent's customer, and a Management user can approve FX/Special Price.
+Confirm an authenticated but unapproved account is rejected, an External Sales
+user cannot see another agent's customer, and a Management user can approve
+FX/Special Price.
