@@ -2,6 +2,7 @@ import './styles/app.css';
 import { createConfiguredSupabaseClient } from './lib/supabase.js';
 import { signInWithGoogle } from './lib/auth.js';
 import { completeApprovedSession } from './lib/session.js';
+import { renderCustomers } from './views/customers.js';
 
 const app = document.querySelector('#app');
 
@@ -16,14 +17,15 @@ function renderSignIn(supabase) {
   });
 }
 
-function renderApp(profile) {
-  app.innerHTML = `<main class="centered"><section class="card"><p class="eyebrow">WCAT • ${profile.role}</p><h1>Sales Support</h1><p>Approved access for ${profile.email}.</p><p class="hint">Customer, CRM, Pricing, and PO modules are protected by Supabase RLS.</p></section></main>`;
+async function renderApp(supabase, profile) {
+  app.innerHTML = `<div class="app-shell"><aside><p class="eyebrow">WCAT</p><h2>Sales Support</h2><nav><a href="#customers" class="active">Customers</a><a href="#crm">CRM & Actions</a><a href="#products">Products & Specs</a><a href="#pricing">Pricing</a><a href="#po">Purchase Orders</a></nav><p class="hint">${profile.role}</p></aside><main id="content"></main></div>`;
+  await renderCustomers(document.querySelector('#content'), { supabase, profile });
 }
 
 async function boot(supabase) {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) return renderSignIn(supabase);
-  try { renderApp(await completeApprovedSession(supabase)); }
+  try { await renderApp(supabase, await completeApprovedSession(supabase)); }
   catch (error) { await supabase.auth.signOut(); renderError(error); }
 }
 
