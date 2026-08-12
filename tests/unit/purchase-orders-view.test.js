@@ -14,9 +14,10 @@ const products = [
 ];
 
 const configurations = [
-  { id: 'jumbo-20', is_active: true, shipment_mode: 'Container', container_type: "20'", package: 'Jumbobag', package_type: 'JUMBOBAG', jumbobag_id: 'jumbo-850', bags_per_container: 20, standard_mt_per_container: 17, tolerance_percent: 2, jumbobag_master: { weight_kg: 850 } },
-  { id: 'bag-25', is_active: true, shipment_mode: 'Container', container_type: "20'", package: 'Bag 25 kg', package_type: 'BAG_25KG', jumbobag_id: null, bags_per_container: null, standard_mt_per_container: null, tolerance_percent: 0, jumbobag_master: null },
-  { id: 'bulk-fixed', is_active: true, shipment_mode: 'Container', container_type: "20'", package: 'Bulk Container', package_type: 'BULK_CONTAINER', jumbobag_id: null, bags_per_container: null, standard_mt_per_container: 20, tolerance_percent: 5, jumbobag_master: null },
+  { id: 'jumbo-20', is_active: true, shipment_mode: 'Container', container_type: '20', package: 'Jumbobag', package_type: 'JUMBOBAG', jumbobag_id: 'jumbo-850', bags_per_container: 20, standard_mt_per_container: 17, tolerance_percent: 2, jumbobag_master: { weight_kg: 850 } },
+  { id: 'bag-25', is_active: true, shipment_mode: 'Container', container_type: '20', package: 'Bag 25 kg', package_type: 'BAG_25KG', jumbobag_id: null, bags_per_container: null, standard_mt_per_container: null, tolerance_percent: 0, jumbobag_master: null },
+  { id: 'bulk-liner', is_active: true, shipment_mode: 'Container', container_type: '20', package: 'Bulk Container + Liner', package_type: 'BULK_CONTAINER', jumbobag_id: null, bags_per_container: null, standard_mt_per_container: 20, tolerance_percent: 5, jumbobag_master: null },
+  { id: 'bulk-fixed', is_active: true, shipment_mode: 'Container', container_type: '20', package: 'Bulk Container', package_type: 'BULK_CONTAINER', jumbobag_id: null, bags_per_container: null, standard_mt_per_container: 20, tolerance_percent: 5, jumbobag_master: null },
   { id: 'bulk-vessel', is_active: true, shipment_mode: 'Bulk Vessel', container_type: 'Vessel', package: 'Bulk', package_type: 'LEGACY', jumbobag_id: null, bags_per_container: null, standard_mt_per_container: null, tolerance_percent: 0, jumbobag_master: null },
   { id: 'truck', is_active: true, shipment_mode: 'Truck', container_type: 'Truck', package: 'Bulk', package_type: 'LEGACY', jumbobag_id: null, bags_per_container: null, standard_mt_per_container: null, tolerance_percent: 0, jumbobag_master: null },
 ];
@@ -67,6 +68,14 @@ describe('purchase order form selectors', () => {
     expect(document.querySelector('select[name="specId"]')?.disabled).toBe(true);
     expect(document.querySelector('select[name="shipmentType"]')).not.toBeNull();
     expect(document.querySelector('#po-create')?.textContent).not.toContain('Shipment Configuration');
+  });
+
+  it("uses canonical container keys while displaying the 20-foot label", () => {
+    change(document.querySelector('select[name="shipmentType"]'), 'Container');
+    const containerType = document.querySelector('select[name="shipmentContainerType"]');
+
+    expect([...containerType.options].map(({ value, textContent }) => ({ value, label: textContent })))
+      .toContainEqual({ value: '20', label: "20'" });
   });
 
   it('lists active products and only approved specs for the selected product', () => {
@@ -121,7 +130,7 @@ describe('purchase order form selectors', () => {
 
   it('resolves a completed Jumbobag selection and shows its fixed load', () => {
     change(document.querySelector('select[name="shipmentType"]'), 'Container');
-    change(document.querySelector('select[name="shipmentContainerType"]'), "20'");
+    change(document.querySelector('select[name="shipmentContainerType"]'), '20');
     change(document.querySelector('select[name="shipmentPackageKey"]'), 'JUMBOBAG:Jumbobag:jumbo-850');
     change(document.querySelector('select[name="shipmentBagsPerContainer"]'), '20');
 
@@ -133,7 +142,7 @@ describe('purchase order form selectors', () => {
 
   it('resolves a fixed Bulk Container without Bags and shows MT and tolerance', () => {
     change(document.querySelector('select[name="shipmentType"]'), 'Container');
-    change(document.querySelector('select[name="shipmentContainerType"]'), "20'");
+    change(document.querySelector('select[name="shipmentContainerType"]'), '20');
     change(document.querySelector('select[name="shipmentPackageKey"]'), 'BULK_CONTAINER:Bulk Container:');
 
     expect(document.querySelector('[name="shipmentConfigurationId"]').value).toBe('bulk-fixed');
@@ -145,7 +154,7 @@ describe('purchase order form selectors', () => {
 
   it('shows integer Bags and a live calculated MT for Bag 25 kg', () => {
     change(document.querySelector('select[name="shipmentType"]'), 'Container');
-    change(document.querySelector('select[name="shipmentContainerType"]'), "20'");
+    change(document.querySelector('select[name="shipmentContainerType"]'), '20');
     change(document.querySelector('select[name="shipmentPackageKey"]'), 'BAG_25KG:Bag 25 kg:');
     const bags = document.querySelector('input[name="shipmentBagsPerContainer"]');
 
@@ -181,7 +190,7 @@ describe('purchase order form selectors', () => {
     expect(document.querySelector('[name="manualShipmentMt"]')).toBeNull();
 
     const containerType = document.querySelector('select[name="shipmentContainerType"]');
-    change(containerType, "20'");
+    change(containerType, '20');
     const packageSelect = document.querySelector('select[name="shipmentPackageKey"]');
     change(packageSelect, 'BULK_CONTAINER:Bulk Container:');
     expect(document.querySelector('[name="shipmentConfigurationId"]').value).toBe('bulk-fixed');

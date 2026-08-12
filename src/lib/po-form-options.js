@@ -23,6 +23,10 @@ function optionOrder(left, right) {
   return collator.compare(left.label, right.label) || collator.compare(left.value, right.value);
 }
 
+function containerTypeLabel(containerType) {
+  return containerType === '20' ? "20'" : containerType;
+}
+
 export function packageKey(configuration) {
   return `${configuration.package_type}:${configuration.package}:${configuration.jumbobag_id ?? ''}`;
 }
@@ -42,7 +46,7 @@ export function listShipmentTypes(configurations) {
 export function listContainerTypes(configurations, shipmentType) {
   if (!shipmentType) return [];
   return uniqueOptions(activeConfigurations(configurations).filter(({ shipment_mode }) => shipment_mode === shipmentType),
-    ({ container_type }) => ({ value: container_type, label: container_type }), optionOrder);
+    ({ container_type }) => ({ value: container_type, label: containerTypeLabel(container_type) }), optionOrder);
 }
 
 export function listPackages(configurations, shipmentType, containerType) {
