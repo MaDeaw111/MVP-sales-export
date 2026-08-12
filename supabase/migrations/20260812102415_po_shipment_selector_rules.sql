@@ -1,29 +1,66 @@
-insert into public.shipment_configurations(
-  shipment_mode,
-  container_type,
-  package,
-  package_type,
-  standard_mt_per_container,
-  tolerance_percent,
-  is_active,
-  remark
-)
-select
-  'Container',
-  '20',
-  'Bulk Container + Liner',
-  'BULK_CONTAINER',
-  20,
-  5,
-  true,
-  'Bulk Container + Liner: 20 MT +/-5%'
-where not exists (
-  select 1
-  from public.shipment_configurations
-  where shipment_mode = 'Container'
-    and container_type = '20'
-    and package = 'Bulk Container + Liner'
-);
+create or replace function public.reconcile_liner_shipment_configurations()
+returns void
+language plpgsql
+set search_path = public
+as $$
+begin
+  with candidates as (
+    select
+      id,
+      row_number() over (order by id) as candidate_rank
+    from public.shipment_configurations
+    where lower(trim(package)) = 'bulk container + liner'
+  )
+  update public.shipment_configurations configuration
+  set
+    shipment_mode = 'Container',
+    container_type = '20''',
+    package = 'Bulk Container + Liner',
+    package_type = 'BULK_CONTAINER',
+    standard_mt_per_container = 20.000,
+    tolerance_percent = 5.000,
+    is_active = candidates.candidate_rank = 1,
+    remark = 'Bulk Container + Liner: 20 MT +/-5%'
+  from candidates
+  where configuration.id = candidates.id;
+
+  insert into public.shipment_configurations(
+    shipment_mode,
+    container_type,
+    package,
+    package_type,
+    standard_mt_per_container,
+    tolerance_percent,
+    is_active,
+    remark
+  )
+  select
+    'Container',
+    '20''',
+    'Bulk Container + Liner',
+    'BULK_CONTAINER',
+    20.000,
+    5.000,
+    true,
+    'Bulk Container + Liner: 20 MT +/-5%'
+  where not exists (
+    select 1
+    from public.shipment_configurations
+    where lower(trim(package)) = 'bulk container + liner'
+  );
+end;
+$$;
+
+select public.reconcile_liner_shipment_configurations();
+
+create unique index shipment_configurations_one_active_bulk_liner_20_idx
+  on public.shipment_configurations ((true))
+  where is_active
+    and shipment_mode = 'Container'
+    and container_type = '20'''
+    and package = 'Bulk Container + Liner';
+
+revoke execute on function public.reconcile_liner_shipment_configurations() from public, anon, authenticated;
 
 create or replace function public.snapshot_po_shipment_load()
 returns trigger
