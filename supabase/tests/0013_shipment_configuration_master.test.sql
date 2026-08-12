@@ -1,5 +1,5 @@
 begin;
-select plan(21);
+select plan(24);
 
 select ok(to_regclass('public.jumbobag_master') is not null, 'Jumbobag master exists');
 select is((select count(*)::int from public.jumbobag_master where is_active), 3, 'three active Jumbobag weights are seeded');
@@ -229,6 +229,45 @@ select is(
   (select shipment_mt_per_container from bag_po_result),
   1.000::numeric,
   '25 kg bag PO calculates manual bag count as MT / Shipment'
+);
+
+create temp table fixed_jumbobag_po_result on commit drop as
+with po as (
+  insert into public.purchase_orders(
+    customer_id, customer_po_number, po_date, product_id, product_spec_id,
+    shipment_configuration_id, contract_quantity_mt, incoterm, destination,
+    currency, final_selling_price, created_by
+  )
+  select fixture.customer_id, 'SHIPMENT-TEST-JUMBOBAG', current_date, fixture.product_id, fixture.spec_id,
+    configuration.id, 1, 'FOB', 'Test destination', 'USD', 100, fixture.profile_id
+  from shipment_po_fixture fixture
+  cross join lateral (
+    select configuration.id
+    from public.shipment_configurations configuration
+    join public.jumbobag_master jumbobag on jumbobag.id = configuration.jumbobag_id
+    where configuration.package_type = 'JUMBOBAG'
+      and configuration.container_type = '20'
+      and jumbobag.weight_kg = 850
+      and configuration.bags_per_container = 20
+      and configuration.is_active
+  ) configuration
+  returning shipment_bags_per_container, shipment_mt_per_container, shipment_tolerance_percent
+)
+select shipment_bags_per_container, shipment_mt_per_container, shipment_tolerance_percent from po;
+select is(
+  (select shipment_bags_per_container from fixed_jumbobag_po_result),
+  20,
+  'fixed Jumbobag PO snapshots configured bags per container'
+);
+select is(
+  (select shipment_mt_per_container from fixed_jumbobag_po_result),
+  17.000::numeric,
+  'fixed Jumbobag PO snapshots configured MT per container'
+);
+select is(
+  (select shipment_tolerance_percent from fixed_jumbobag_po_result),
+  0.000::numeric,
+  'fixed Jumbobag PO snapshots configured tolerance'
 );
 
 select * from finish();
