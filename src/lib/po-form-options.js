@@ -4,7 +4,6 @@ const packageTypeOrder = {
   JUMBOBAG: 0,
   BAG_25KG: 1,
   BULK_CONTAINER: 2,
-  BULK_CONTAINER_LINER: 3,
 };
 
 function activeConfigurations(configurations) {
