@@ -57,6 +57,21 @@ The source approved spec remains unchanged. The application creates the new
 product and its approved `1.0` spec atomically, so a failed save cannot leave
 an incomplete product record.
 
+## Shipment Configuration master data
+
+An Admin first maintains the available weights in **Jumbobag Master**, then
+uses **Shipment Config** to add permitted container/package patterns.
+
+- Jumbobag: select an active Jumbobag weight and an approved Bags count; the
+  database calculates MT / Container.
+- Bag 25 kg: create the package template. A whole-number Bags count is entered
+  on the PO and MT is calculated at 25 kg per bag.
+- Bulk Container: Bags is hidden. Enter MT / Container and tolerance directly,
+  such as `20 MT` and `5%`.
+
+Do not delete a configuration that has been used by a PO. Deactivate it when
+it is no longer available; every PO retains its original loading snapshot.
+
 ## Release verification
 
 ```powershell

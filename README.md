@@ -17,6 +17,19 @@ approval, and private Customer PO document storage.
   limits, and create the new approved product. The product and its first
   approved spec are saved together.
 
+## Shipment Configuration rules
+
+- Jumbobag weights are maintained by Admin in **Jumbobag Master**. The initial
+  choices are 850 kg, 950 kg, and 1,200 kg.
+- A Jumbobag shipment configuration selects a standard bag count and the
+  system calculates MT / Container.
+- Bag 25 kg has no fixed bag count. Enter a whole-number bag count on the PO
+  and the system calculates MT / Container.
+- Bulk Container hides No. of Bags. Admin enters MT / Container and tolerance
+  directly, for example `20 MT +/-5%`.
+- A PO snapshots its selected shipment load so later master-data changes do
+  not alter historic reporting.
+
 ## Local development
 
 1. Copy `.env.example` to `.env.local` and set the public Supabase URL/key.

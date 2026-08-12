@@ -59,6 +59,9 @@ end;
 $$;
 create trigger snapshot_po_shipment_load before insert or update on public.purchase_orders for each row execute function public.snapshot_po_shipment_load();
 
+revoke execute on function public.sync_shipment_configuration() from public, anon, authenticated;
+revoke execute on function public.snapshot_po_shipment_load() from public, anon, authenticated;
+
 update public.shipment_configurations set package_type = 'BULK_CONTAINER' where shipment_mode = 'Container' and package ilike '%bulk%';
 update public.shipment_configurations set package_type = 'LEGACY' where package_type = 'LEGACY';
 update public.shipment_configurations set is_active = false where shipment_mode = 'Container' and package_type = 'LEGACY';
