@@ -22,7 +22,13 @@ const configurations = [
   { id: 'truck', is_active: true, shipment_mode: 'Truck', container_type: 'Truck', package: 'Bulk', package_type: 'LEGACY', jumbobag_id: null, bags_per_container: null, standard_mt_per_container: null, tolerance_percent: 0, jumbobag_master: null },
 ];
 
-function createSupabase(productData, configurationData) {
+const customers = [
+  { id: 'customer-prospect', customer_code: 'CUST-001', name: 'Prospect Buyer', status: 'PROSPECT' },
+  { id: 'customer-active', customer_code: 'CUST-002', name: 'Active Buyer', status: 'ACTIVE_CUSTOMER' },
+  { id: 'customer-inactive', customer_code: 'CUST-003', name: 'Inactive Buyer', status: 'INACTIVE' },
+];
+
+function createSupabase(productData, configurationData, customerData) {
   const state = { purchaseOrderInserts: [] };
   return {
     state,
@@ -30,6 +36,7 @@ function createSupabase(productData, configurationData) {
       from(table) {
         if (table === 'products') return { select: () => ({ order: () => Promise.resolve({ data: productData, error: null }) }) };
         if (table === 'shipment_configurations') return { select: () => ({ eq: () => ({ order: () => Promise.resolve({ data: configurationData, error: null }) }) }) };
+        if (table === 'customers') return { select: () => ({ order: () => Promise.resolve(customerData) }) };
         if (table === 'purchase_orders') return { insert: (payload) => {
           state.purchaseOrderInserts.push(payload);
           return { select: () => ({ single: () => Promise.resolve({ data: { id: 'po-created' }, error: null }) }) };
@@ -41,12 +48,12 @@ function createSupabase(productData, configurationData) {
   };
 }
 
-async function renderFixture({ productData = products, configurationData = configurations } = {}) {
+async function renderFixture({ productData = products, configurationData = configurations, customerData = { data: customers, error: null } } = {}) {
   const dom = new JSDOM('<div id="app"></div>');
   global.document = dom.window.document;
   global.window = dom.window;
   global.FormData = dom.window.FormData;
-  const fixture = createSupabase(productData, configurationData);
+  const fixture = createSupabase(productData, configurationData, customerData);
   await renderPurchaseOrders(document.querySelector('#app'), { supabase: fixture.supabase, profile: { role: 'ADMIN' } });
   return fixture.state;
 }
@@ -68,6 +75,47 @@ describe('purchase order form selectors', () => {
     expect(document.querySelector('select[name="specId"]')?.disabled).toBe(true);
     expect(document.querySelector('select[name="shipmentType"]')).not.toBeNull();
     expect(document.querySelector('#po-create')?.textContent).not.toContain('Shipment Configuration');
+  });
+
+  it('lists every customer directory entry as a selectable customer value', () => {
+    const customer = document.querySelector('select[name="customerId"]');
+
+    expect(customer?.disabled).toBe(false);
+    expect([...customer.options].map(({ value, textContent }) => ({ value, label: textContent }))).toEqual(expect.arrayContaining([
+      { value: 'customer-prospect', label: 'CUST-001 â€” Prospect Buyer' },
+      { value: 'customer-active', label: 'CUST-002 â€” Active Buyer' },
+      { value: 'customer-inactive', label: 'CUST-003 â€” Inactive Buyer' },
+    ]));
+    expect(document.querySelector('#po-create input[name="customerId"]')).toBeNull();
+  });
+
+  it('keeps customer selection disabled when the directory lookup fails', async () => {
+    await renderFixture({ customerData: { data: null, error: new Error('Customer directory unavailable') } });
+
+    const customer = document.querySelector('select[name="customerId"]');
+    expect(customer?.disabled).toBe(true);
+    expect(customer?.options[0]?.textContent).toBe('Customer directory unavailable');
+    expect(document.querySelector('#po-create input[name="customerId"]')).toBeNull();
+  });
+
+  it('submits the selected prospect customer ID when creating a purchase order', async () => {
+    change(document.querySelector('select[name="customerId"]'), 'customer-prospect');
+    change(document.querySelector('select[name="productId"]'), 'p1');
+    change(document.querySelector('select[name="specId"]'), 's-approved');
+    change(document.querySelector('select[name="shipmentType"]'), 'Truck');
+    change(document.querySelector('select[name="shipmentPackageKey"]'), 'LEGACY:Bulk:');
+    document.querySelector('[name="manualShipmentMt"]').value = '500';
+    document.querySelector('[name="number"]').value = 'PO-001';
+    document.querySelector('[name="date"]').value = '2026-08-14';
+    document.querySelector('[name="quantity"]').value = '500';
+    document.querySelector('[name="destination"]').value = 'Bangkok';
+    document.querySelector('[name="sellingPrice"]').value = '450';
+
+    document.querySelector('#po-create').dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true }));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(state.purchaseOrderInserts).toHaveLength(1);
+    expect(state.purchaseOrderInserts[0]).toMatchObject({ customer_id: 'customer-prospect' });
   });
 
   it("uses canonical container keys while displaying the 20-foot label", () => {
