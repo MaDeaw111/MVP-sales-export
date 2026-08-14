@@ -26,6 +26,7 @@ const customers = [
   { id: 'customer-prospect', customer_code: 'CUST-001', name: 'Prospect Buyer', status: 'PROSPECT' },
   { id: 'customer-active', customer_code: 'CUST-002', name: 'Active Buyer', status: 'ACTIVE_CUSTOMER' },
   { id: 'customer-inactive', customer_code: 'CUST-003', name: 'Inactive Buyer', status: 'INACTIVE' },
+  { id: 'customer-no-code', customer_code: '', name: 'Name Only Buyer', status: 'PROSPECT' },
 ];
 
 function createSupabase(productData, configurationData, customerData) {
@@ -82,9 +83,10 @@ describe('purchase order form selectors', () => {
 
     expect(customer?.disabled).toBe(false);
     expect([...customer.options].map(({ value, textContent }) => ({ value, label: textContent }))).toEqual(expect.arrayContaining([
-      { value: 'customer-prospect', label: 'CUST-001 â€” Prospect Buyer' },
-      { value: 'customer-active', label: 'CUST-002 â€” Active Buyer' },
-      { value: 'customer-inactive', label: 'CUST-003 â€” Inactive Buyer' },
+      { value: 'customer-prospect', label: 'CUST-001 — Prospect Buyer' },
+      { value: 'customer-active', label: 'CUST-002 — Active Buyer' },
+      { value: 'customer-inactive', label: 'CUST-003 — Inactive Buyer' },
+      { value: 'customer-no-code', label: 'Name Only Buyer' },
     ]));
     expect(document.querySelector('#po-create input[name="customerId"]')).toBeNull();
   });

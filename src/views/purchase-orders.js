@@ -46,7 +46,7 @@ export async function renderPurchaseOrders(container, { supabase, profile }) {
   const shipmentDetail = container.querySelector('#shipment-po-detail');
 
   setSelectOptions(form.elements.customerId, customerDirectoryAvailable ? 'Select Customer' : 'Customer directory unavailable', customers
-    .map((customer) => ({ value: customer.id, label: customer.customer_code ? `${customer.customer_code} â€” ${customer.name}` : customer.name })));
+    .map((customer) => ({ value: customer.id, label: customer.customer_code ? `${customer.customer_code} — ${customer.name}` : customer.name })));
   form.elements.customerId.disabled = !customerDirectoryAvailable || customers.length === 0;
   setSelectOptions(form.elements.productId, 'Select Product', products.filter((product) => product.is_active !== false)
     .map((product) => ({ value: product.id, label: `${product.code} — ${product.name}` })));
