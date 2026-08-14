@@ -169,6 +169,9 @@ export async function renderPurchaseOrders(container, { supabase, profile }) {
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
     try {
+      if (form.elements.customerId.disabled || !form.elements.customerId.value) {
+        throw new Error('Select a Customer');
+      }
       const configuration = resolveShipmentConfiguration(configurations, currentShipmentSelection());
       if (!configuration
         || form.elements.shipmentConfigurationId.value !== configuration.id

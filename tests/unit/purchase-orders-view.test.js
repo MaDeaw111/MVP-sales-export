@@ -64,6 +64,25 @@ function change(select, value) {
   select.dispatchEvent(new window.Event('change', { bubbles: true }));
 }
 
+function completeValidCreateForm({ customerId } = {}) {
+  if (customerId) change(document.querySelector('select[name="customerId"]'), customerId);
+  change(document.querySelector('select[name="productId"]'), 'p1');
+  change(document.querySelector('select[name="specId"]'), 's-approved');
+  change(document.querySelector('select[name="shipmentType"]'), 'Truck');
+  change(document.querySelector('select[name="shipmentPackageKey"]'), 'LEGACY:Bulk:');
+  document.querySelector('[name="manualShipmentMt"]').value = '500';
+  document.querySelector('[name="number"]').value = 'PO-001';
+  document.querySelector('[name="date"]').value = '2026-08-14';
+  document.querySelector('[name="quantity"]').value = '500';
+  document.querySelector('[name="destination"]').value = 'Bangkok';
+  document.querySelector('[name="sellingPrice"]').value = '450';
+}
+
+async function submitCreateForm() {
+  document.querySelector('#po-create').dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true }));
+  await new Promise((resolve) => setTimeout(resolve, 0));
+}
+
 describe('purchase order form selectors', () => {
   let state;
 
@@ -100,21 +119,30 @@ describe('purchase order form selectors', () => {
     expect(document.querySelector('#po-create input[name="customerId"]')).toBeNull();
   });
 
-  it('submits the selected prospect customer ID when creating a purchase order', async () => {
-    change(document.querySelector('select[name="customerId"]'), 'customer-prospect');
-    change(document.querySelector('select[name="productId"]'), 'p1');
-    change(document.querySelector('select[name="specId"]'), 's-approved');
-    change(document.querySelector('select[name="shipmentType"]'), 'Truck');
-    change(document.querySelector('select[name="shipmentPackageKey"]'), 'LEGACY:Bulk:');
-    document.querySelector('[name="manualShipmentMt"]').value = '500';
-    document.querySelector('[name="number"]').value = 'PO-001';
-    document.querySelector('[name="date"]').value = '2026-08-14';
-    document.querySelector('[name="quantity"]').value = '500';
-    document.querySelector('[name="destination"]').value = 'Bangkok';
-    document.querySelector('[name="sellingPrice"]').value = '450';
+  it('rejects PO creation when the customer directory lookup fails', async () => {
+    state = await renderFixture({ customerData: { data: null, error: new Error('Customer directory unavailable') } });
+    completeValidCreateForm();
 
-    document.querySelector('#po-create').dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true }));
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    await submitCreateForm();
+
+    expect(state.purchaseOrderInserts).toEqual([]);
+    expect(document.querySelector('#po-result').textContent).toBe('Select a Customer');
+  });
+
+  it('rejects PO creation when the readable customer directory is empty', async () => {
+    state = await renderFixture({ customerData: { data: [], error: null } });
+    completeValidCreateForm();
+
+    await submitCreateForm();
+
+    expect(state.purchaseOrderInserts).toEqual([]);
+    expect(document.querySelector('#po-result').textContent).toBe('Select a Customer');
+  });
+
+  it('submits the selected prospect customer ID when creating a purchase order', async () => {
+    completeValidCreateForm({ customerId: 'customer-prospect' });
+
+    await submitCreateForm();
 
     expect(state.purchaseOrderInserts).toHaveLength(1);
     expect(state.purchaseOrderInserts[0]).toMatchObject({ customer_id: 'customer-prospect' });
@@ -146,6 +174,9 @@ describe('purchase order form selectors', () => {
   });
 
   it('renders hostile master-data labels as escaped option text', async () => {
+    const hostileCustomerId = 'a19f23d0-7a00-4f47-a3fb-0123456789ab"><img id="customer-id-xss">';
+    const hostileCustomerCode = '</option><img id="customer-code-xss">';
+    const hostileCustomerName = '<svg id="customer-name-xss" onload="alert(1)">';
     const hostileProductId = 'p-hostile"><img id="product-id-xss">';
     const hostileProductCode = '</option><img id="product-xss">';
     const hostileSpecName = '</option><img id="spec-xss">';
@@ -155,7 +186,16 @@ describe('purchase order form selectors', () => {
         { id: 's-hostile', name: hostileSpecName, version: '1.0', status: 'APPROVED', parameters: {}, note: null },
       ] }],
       configurationData: [{ id: 'hostile-config', is_active: true, shipment_mode: 'Container', container_type: "40'", package: hostilePackage, package_type: 'BULK_CONTAINER', jumbobag_id: null, bags_per_container: null, standard_mt_per_container: 20, tolerance_percent: 5, jumbobag_master: null }],
+      customerData: { data: [{ id: hostileCustomerId, customer_code: hostileCustomerCode, name: hostileCustomerName, status: 'PROSPECT' }], error: null },
     });
+
+    const customerOption = [...document.querySelector('select[name="customerId"]').options]
+      .find(({ value }) => value === hostileCustomerId);
+    expect(customerOption).toBeDefined();
+    expect(customerOption.textContent).toBe(`${hostileCustomerCode} — ${hostileCustomerName}`);
+    expect(customerOption.innerHTML).toContain('&lt;img');
+    expect(customerOption.innerHTML).toContain('&lt;svg');
+    expect(document.querySelector('#customer-code-xss, #customer-name-xss, #customer-id-xss')).toBeNull();
 
     const productOption = [...document.querySelector('select[name="productId"]').options].find(({ value }) => value === hostileProductId);
     expect(productOption).toBeDefined();
@@ -266,6 +306,7 @@ describe('purchase order form selectors', () => {
       ...configurations,
       { ...configurations.find(({ id }) => id === 'bulk-vessel'), id: 'bulk-vessel-duplicate' },
     ] });
+    change(document.querySelector('select[name="customerId"]'), 'customer-prospect');
     change(document.querySelector('select[name="shipmentType"]'), 'Bulk Vessel');
     change(document.querySelector('select[name="shipmentPackageKey"]'), 'LEGACY:Bulk:');
     document.querySelector('[name="manualShipmentMt"]').value = '500';
