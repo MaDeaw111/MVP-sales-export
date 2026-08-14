@@ -1,5 +1,5 @@
 export async function listCustomers(supabase) {
-  const { data, error } = await supabase.from('customers').select('id,customer_code,name,source,status,owner_profile_id,created_at').order('name');
+  const { data, error } = await supabase.from('customers').select('id,customer_code,name,source,status,owner_profile_id,created_at').order('customer_code');
   if (error) throw error;
   return data;
 }
@@ -37,7 +37,12 @@ export async function updateCustomer(supabase, customerId, values) {
     .eq('id', customerId)
     .select('id,customer_code,name,source,status,owner_profile_id')
     .single();
-  if (error) throw error;
+  if (error) {
+    if (error.code === '23505') {
+      throw new Error('Customer code already exists');
+    }
+    throw error;
+  }
   return data;
 }
 

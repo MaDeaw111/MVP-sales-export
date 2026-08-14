@@ -2,11 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { listCustomers, createDirectCustomer, updateCustomer } from '../../src/lib/customers-api.js';
 
 describe('customers API', () => {
-  it('loads customers ordered by name', async () => {
+  it('loads customers ordered by customer_code', async () => {
     const calls = [];
     const supabase = { from: () => ({ select: (fields) => ({ order: (field) => { calls.push({ fields, field }); return Promise.resolve({ data: [{ customer_code: 'CUST-001', name: 'ACME' }], error: null }); } }) }) };
     await expect(listCustomers(supabase)).resolves.toEqual([{ customer_code: 'CUST-001', name: 'ACME' }]);
-    expect(calls).toEqual([{ fields: 'id,customer_code,name,source,status,owner_profile_id,created_at', field: 'name' }]);
+    expect(calls).toEqual([{ fields: 'id,customer_code,name,source,status,owner_profile_id,created_at', field: 'customer_code' }]);
   });
 
   it('creates a Direct WCAT prospect', async () => {
@@ -24,6 +24,26 @@ describe('customers API', () => {
       ownerProfileId: '',
       status: 'ACTIVE_CUSTOMER',
     })).rejects.toThrow('External Sales owner is required');
+  });
+
+  it('rejects an update with a duplicate customer code', async () => {
+    const supabase = {
+      from: () => ({
+        update: () => ({
+          eq: () => ({
+            select: () => ({
+              single: () => Promise.resolve({ data: null, error: { code: '23505', message: 'duplicate key...' } })
+            })
+          })
+        })
+      })
+    };
+    await expect(updateCustomer(supabase, 'c1', {
+      customerCode: 'CUST-001',
+      name: 'Buyer',
+      source: 'DIRECT_WCAT',
+      status: 'PROSPECT'
+    })).rejects.toThrow('Customer code already exists');
   });
 
   it('clears the owner when updating a Direct WCAT customer', async () => {
